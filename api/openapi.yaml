@@ -1,0 +1,1828 @@
+openapi: 3.0.0
+info:
+  description: |
+    The Books API provides information about book reviews and The New York Times Best Sellers lists.
+
+    ## Best Sellers Lists Services
+    ### List Names
+    The lists/names service returns a list of all the NYT Best Sellers Lists.  Some lists are published weekly and others monthly.  The response includes when each list was first published and last published.
+
+    ```
+    /lists/names.json
+    ```
+
+    ### List Data
+
+    The lists/{date}/{name} service returns the books on the best sellers list for the specified date and list name.
+
+    ```
+    /lists/2019-01-20/hardcover-fiction.json
+    ```
+
+    Use "current" for {date} to get the latest list.
+    ```
+    /lists/current/hardcover-fiction.json
+    ```
+
+    ## Book Reviews Services
+
+    The book reviews service lets you get NYT book review by author, ISBN, or title.
+
+    ```
+    /reviews.json?author=Michelle+Obama
+    ```
+
+    ```
+    /reviews.json?isbn=9781524763138
+    ```
+
+    ```
+    /reviews.json?title=Becoming
+    ```
+
+    ## Example Calls
+
+    ```
+    https://api.nytimes.com/svc/books/v3/lists/current/hardcover-fiction.json?api-key=yourkey
+    ```
+
+    ```
+    https://api.nytimes.com/svc/books/v3/reviews.json?author=Stephen+King&api-key=yourkey
+    ```
+  title: Books API
+  version: 3.0.0
+  x-konfig-has-globally-required-security: true
+servers:
+- url: https://api.nytimes.com/svc/books/v3
+tags:
+- name: List
+- name: Review
+paths:
+  /lists.json:
+    get:
+      description: Get Best Sellers list.  If no date is provided returns the latest
+        list.
+      operationId: List_getBestSellers
+      parameters:
+      - description: |-
+          The name of the Times best sellers list (hardcover-fiction, paperback-nonfiction, ...).
+          The /lists/names service returns all the list names.
+          The encoded list names are lower case with hyphens instead of spaces (e.g. e-book-fiction, instead of E-Book Fiction).
+        explode: true
+        in: query
+        name: list
+        required: true
+        schema:
+          default: hardcover-fiction
+          example: hardcover-fiction
+          type: string
+          x-konfig-original-example: hardcover-fiction
+          x-konfig-generated-schema: konfig-generated-schema-paths--lists.json-get-parameters-0-schema
+        style: form
+      - description: |-
+          YYYY-MM-DD
+
+          The week-ending date for the sales reflected on list-name. Times best sellers lists are compiled using available book sale data. The bestsellers-date may be significantly earlier than published-date. For additional information, see the explanation at the bottom of any best-seller list page on NYTimes.com (example: Hardcover Fiction, published Dec. 5 but reflecting sales to Nov. 29).
+        explode: true
+        in: query
+        name: bestsellers-date
+        required: false
+        schema:
+          pattern: "^\\d{4}-\\d{2}-\\d{2}$"
+          type: string
+        style: form
+      - description: |-
+          YYYY-MM-DD
+
+          The date the best sellers list was published on NYTimes.com (different than bestsellers-date).  Use "current" for latest list.
+        explode: true
+        in: query
+        name: published-date
+        required: false
+        schema:
+          pattern: "^\\d{4}-\\d{2}-\\d{2}$"
+          type: string
+        style: form
+      - description: "Sets the starting point of the result set (0, 20, ...).  Used\
+          \ to paginate thru books if list has more than 20. Defaults to 0.  The num_results\
+          \ field indicates how many books are in the list."
+        explode: true
+        in: query
+        name: offset
+        required: false
+        schema:
+          multipleOf: 20
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                response:
+                  value:
+                    status: OK
+                    copyright: Copyright (c) 2019 The New York Times Company.  All
+                      Rights Reserved.
+                    num_results: 1
+                    last_modified: 2016-03-11T13:09:01-05:00
+                    results:
+                    - list_name: Hardcover Fiction
+                      display_name: Hardcover Fiction
+                      bestsellers_date: 2016-03-05
+                      published_date: 2016-03-20
+                      rank: 5
+                      rank_last_week: 2
+                      weeks_on_list: 2
+                      asterisk: 0
+                      dagger: 0
+                      amazon_product_url: http://www.amazon.com/Girls-Guide-Moving-On-Novel-ebook/dp/B00ZNE17B4?tag=thenewyorktim-20
+                      isbns:
+                      - isbn10: 553391925
+                        isbn13: "9780553391923"
+                      book_details:
+                      - title: A GIRL'S GUIDE TO MOVING ON
+                        description: A mother and her daughter-in-law both leave unhappy
+                          marriages and take up with new men.
+                        contributor: by Debbie Macomber
+                        author: Debbie Macomber
+                        contributor_note: ""
+                        price: 0
+                        age_group: ""
+                        publisher: Ballantine
+                        primary_isbn13: "9780553391923"
+                        primary_isbn10: 553391925
+                      reviews:
+                      - book_review_link: ""
+                        first_chapter_link: ""
+                        sunday_review_link: ""
+                        article_chapter_link: ""
+              schema:
+                $ref: '#/components/schemas/ListGetBestSellersResponse'
+          description: Best Sellers list books
+      security:
+      - api-key: []
+      summary: Best Sellers List
+      tags:
+      - List
+      x-konfig-operation-can-have-single-parameter: true
+      x-konfig-single-parameter-schema: konfig-generated-schema-single-parameter-schema-get--lists.json
+      x-accepts: application/json
+  /lists/{date}/{list}.json:
+    get:
+      description: Get Best Sellers list by date.
+      operationId: List_getByDate
+      parameters:
+      - description: |-
+          YYYY-MM-DD or "current"
+
+          The date the best sellers list was published on NYTimes.com.  Use "current" to get latest list.
+        explode: false
+        in: path
+        name: date
+        required: true
+        schema:
+          pattern: "^(\\d{4}-\\d{2}-\\d{2}|current)$"
+          type: string
+        style: simple
+      - description: Name of the Best Sellers List (e.g. hardcover-fiction). You can
+          get the full list of names from the /lists/names.json service.
+        explode: false
+        in: path
+        name: list
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: "Sets the starting point of the result set (0, 20, ...).  Used\
+          \ to paginate thru books if list has more than 20. Defaults to 0.  The num_results\
+          \ field indicates how many books are in the list."
+        explode: true
+        in: query
+        name: offset
+        required: false
+        schema:
+          multipleOf: 20
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                response:
+                  value:
+                    status: OK
+                    copyright: Copyright (c) 2019 The New York Times Company.  All
+                      Rights Reserved.
+                    num_results: 15
+                    last_modified: 2015-12-25T13:05:20-05:00
+                    results:
+                      list_name: Trade Fiction Paperback
+                      bestsellers_date: 2015-12-19
+                      published_date: 2016-01-03
+                      display_name: Paperback Trade Fiction
+                      normal_list_ends_at: 10
+                      updated: WEEKLY
+                      books:
+                      - title: THE MARTIAN
+                        description: "Separated from his crew, an astronaut embarks\
+                          \ on a quest to stay alive on Mars. The basis of the movie."
+                        rank: 1
+                        rank_last_week: 0
+                        weeks_on_list: 60
+                        asterisk: 0
+                        dagger: 0
+                        primary_isbn10: 553418025
+                        primary_isbn13: "9780553418026"
+                        publisher: Broadway
+                        price: 0
+                        author: Andy Weir
+                        contributor: by Andy Weir
+                        contributor_note: ""
+                        book_image: http://du.ec2.nytimes.com.s3.amazonaws.com/prd/books/9780804139038.jpg
+                        amazon_product_url: http://www.amazon.com/The-Martian-Novel-Andy-Weir-ebook/dp/B00EMXBDMA?tag=thenewyorktim-20
+                        age_group: ""
+                        book_review_link: ""
+                        first_chapter_link: ""
+                        sunday_review_link: ""
+                        article_chapter_link: ""
+                        isbns:
+                        - isbn10: 804139024
+                          isbn13: "9780804139021"
+                      corrections: []
+              schema:
+                $ref: '#/components/schemas/ListGetByDateResponse'
+          description: Best Sellers list books.
+      security:
+      - api-key: []
+      summary: Best Sellers List by Date
+      tags:
+      - List
+      x-konfig-operation-can-have-single-parameter: true
+      x-konfig-single-parameter-schema: konfig-generated-schema-single-parameter-schema-get--lists-date-list.json
+      x-accepts: application/json
+  /lists/full-overview.json:
+    get:
+      description: Get all books for all the Best Sellers lists for specified date.
+      operationId: List_getAllBestSellers
+      parameters:
+      - description: |-
+          YYYY-MM-DD
+
+          The best-seller list publication date.
+          You do not have to specify the exact date the list was published. The service will search forward (into the future) for the closest publication date to the date you specify. For example, a request for lists/overview/2013-05-22 will retrieve the list that was published on 05-26.
+
+          If you do not include a published date, the current week's best sellers lists will be returned.
+        explode: true
+        in: query
+        name: published_date
+        required: false
+        schema:
+          pattern: "^\\d{4}-\\d{2}-\\d{2}$"
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OverviewResponse'
+          description: Full overview of Best Sellers lists.
+      security:
+      - api-key: []
+      summary: Best Sellers List Full Overview
+      tags:
+      - List
+      x-konfig-operation-can-have-single-parameter: true
+      x-konfig-single-parameter-schema: konfig-generated-schema-single-parameter-schema-get--lists-full-overview.json
+      x-accepts: application/json
+  /lists/overview.json:
+    get:
+      description: Get top 5 books for all the Best Sellers lists for specified date.
+      operationId: List_getBestSellersOverview
+      parameters:
+      - description: |-
+          YYYY-MM-DD
+
+          The best-seller list publication date.
+          You do not have to specify the exact date the list was published. The service will search forward (into the future) for the closest publication date to the date you specify. For example, a request for lists/overview/2013-05-22 will retrieve the list that was published on 05-26.
+
+          If you do not include a published date, the current week's best sellers lists will be returned.
+        explode: true
+        in: query
+        name: published_date
+        required: false
+        schema:
+          pattern: "^\\d{4}-\\d{2}-\\d{2}$"
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                response:
+                  value:
+                    status: OK
+                    copyright: Copyright (c) 2019 The New York Times Company.  All
+                      Rights Reserved.
+                    num_results: 210
+                    results:
+                      bestsellers_date: 2016-03-05
+                      published_date: 2016-03-20
+                      lists:
+                      - list_id: 704
+                        list_name: Combined Print and E-Book Fiction
+                        display_name: Combined Print & E-Book Fiction
+                        updated: WEEKLY
+                        list_image: http://du.ec2.nytimes.com.s3.amazonaws.com/prd/books/9780399175954.jpg
+                        books:
+                        - title: THE GANGSTER
+                          description: "In the ninth book in this series, set in 1906,\
+                            \ the New York detective Isaac Bell contends with a crime\
+                            \ boss passing as a respectable businessman and a tycoon’\
+                            s plot against President Theodore Roosevelt."
+                          age_group: ""
+                          author: Clive Cussler and Justin Scott
+                          contributor: by Clive Cussler and Justin Scott
+                          contributor_note: ""
+                          created_date: 2016-03-10 12:00:22
+                          price: 0
+                          primary_isbn13: "9780698406421"
+                          primary_isbn10: 698406427
+                          publisher: Putnam
+                          rank: 1
+                          updated_date: 2016-03-10 17:00:21
+              schema:
+                $ref: '#/components/schemas/OverviewResponse'
+          description: Overview of Best Sellers lists.
+      security:
+      - api-key: []
+      summary: Best Sellers List Overview
+      tags:
+      - List
+      x-konfig-operation-can-have-single-parameter: true
+      x-konfig-single-parameter-schema: konfig-generated-schema-single-parameter-schema-get--lists-overview.json
+      x-accepts: application/json
+  /lists/names.json:
+    get:
+      description: Get Best Sellers list names.
+      operationId: List_getNames
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                response:
+                  value:
+                    status: OK
+                    copyright: Copyright (c) 2019 The New York Times Company.  All
+                      Rights Reserved.
+                    num_results: 53
+                    results:
+                    - list_name: Combined Print and E-Book Fiction
+                      display_name: Combined Print & E-Book Fiction
+                      list_name_encoded: combined-print-and-e-book-fiction
+                      oldest_published_date: 2011-02-13
+                      newest_published_date: 2016-03-20
+                      updated: WEEKLY
+              schema:
+                $ref: '#/components/schemas/ListGetNamesResponse'
+          description: Get Best Sellers list names.
+      security:
+      - api-key: []
+      summary: Best Sellers List Names
+      tags:
+      - List
+      x-konfig-operation-can-have-single-parameter: true
+      x-konfig-single-parameter-schema: konfig-generated-schema-single-parameter-schema-get--lists-names.json
+      x-accepts: application/json
+  /lists/best-sellers/history.json:
+    get:
+      description: Get Best Sellers list history.
+      operationId: List_getHistory
+      parameters:
+      - description: The target age group for the best seller.
+        explode: true
+        in: query
+        name: age-group
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: |-
+          The author of the best seller. The author field does not include additional contributors (see Data Structure for more details about the author and contributor fields).
+
+          When searching the author field, you can specify any combination of first, middle and last names.
+
+          When sort-by is set to author, the results will be sorted by author's first name.
+        explode: true
+        in: query
+        name: author
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: |-
+          The author of the best seller, as well as other contributors such as the illustrator (to search or sort by author name only, use author instead).
+
+          When searching, you can specify any combination of first, middle and last names of any of the contributors.
+
+          When sort-by is set to contributor, the results will be sorted by the first name of the first contributor listed.
+        explode: true
+        in: query
+        name: contributor
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: |-
+          International Standard Book Number, 10 or 13 digits
+
+          A best seller may have both 10-digit and 13-digit ISBNs, and may have multiple ISBNs of each type. To search on multiple ISBNs, separate the ISBNs with semicolons (example: 9780446579933;0061374229).
+        explode: true
+        in: query
+        name: isbn
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: "Sets the starting point of the result set (0, 20, ...).  Used\
+          \ to paginate thru results if there are more than 20. Defaults to 0. The\
+          \ num_results field indicates how many results there are total."
+        explode: true
+        in: query
+        name: offset
+        required: false
+        schema:
+          multipleOf: 20
+          type: integer
+        style: form
+      - description: "The publisher's list price of the best seller, including decimal\
+          \ point."
+        explode: true
+        in: query
+        name: price
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: The standardized name of the publisher
+        explode: true
+        in: query
+        name: publisher
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: |-
+          The title of the best seller
+
+          When searching, you can specify a portion of a title or a full title.
+        explode: true
+        in: query
+        name: title
+        required: false
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                response:
+                  value:
+                    status: OK
+                    copyright: Copyright (c) 2019 The New York Times Company.  All
+                      Rights Reserved.
+                    num_results: 28970
+                    results:
+                    - title: '#GIRLBOSS'
+                      description: An online fashion retailer traces her path to success.
+                      contributor: by Sophia Amoruso
+                      author: Sophia Amoruso
+                      contributor_note: ""
+                      price: 0
+                      age_group: ""
+                      publisher: Portfolio/Penguin/Putnam
+                      isbns:
+                      - isbn10: 039916927X
+                        isbn13: "9780399169274"
+                      ranks_history:
+                      - primary_isbn10: "1591847931"
+                        primary_isbn13: "9781591847939"
+                        rank: 8
+                        list_name: Business Books
+                        display_name: Business
+                        published_date: 2016-03-13
+                        bestsellers_date: 2016-02-27
+                        weeks_on_list: 0
+                        ranks_last_week: null
+                        asterisk: 0
+                        dagger: 0
+                      reviews:
+                      - book_review_link: ""
+                        first_chapter_link: ""
+                        sunday_review_link: ""
+                        article_chapter_link: ""
+              schema:
+                $ref: '#/components/schemas/ListGetHistoryResponse'
+          description: Best Sellers list history
+      security:
+      - api-key: []
+      summary: Best Sellers List History
+      tags:
+      - List
+      x-konfig-operation-can-have-single-parameter: true
+      x-konfig-single-parameter-schema: konfig-generated-schema-single-parameter-schema-get--lists-best-sellers-history.json
+      x-accepts: application/json
+  /reviews.json:
+    get:
+      description: Get book reviews.
+      operationId: Review_getBookReviews
+      parameters:
+      - description: Searching by ISBN is the recommended method. You can enter 10-
+          or 13-digit ISBNs.
+        explode: true
+        in: query
+        name: isbn
+        required: false
+        schema:
+          type: integer
+        style: form
+      - description: You’ll need to enter the full title of the book. Spaces in the
+          title will be converted into the characters %20.
+        explode: true
+        in: query
+        name: title
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: "You’ll need to enter the author’s first and last name, separated\
+          \ by a space. This space will be converted into the characters %20."
+        explode: true
+        in: query
+        name: author
+        required: false
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                response:
+                  value:
+                    status: OK
+                    copyright: Copyright (c) 2019 The New York Times Company.  All
+                      Rights Reserved.
+                    num_results: 2
+                    results:
+                    - summary: "In “1Q84,” the Japanese novelist Haruki Murakami writes\
+                        \ about characters in a Tokyo with two moons."
+                      url: http://www.nytimes.com/2011/11/10/books/1q84-by-haruki-murakami-review.html
+                      publication_dt: 2011-11-10
+                      byline: JANET MASLIN
+                      book_title: 1Q84
+                      book_author: Haruki Murakami
+                      isbn13:
+                      - "9780307476463"
+              schema:
+                $ref: '#/components/schemas/ReviewGetBookReviewsResponse'
+          description: Book reviews.
+      security:
+      - api-key: []
+      summary: Reviews
+      tags:
+      - Review
+      x-konfig-operation-can-have-single-parameter: true
+      x-konfig-single-parameter-schema: konfig-generated-schema-single-parameter-schema-get--reviews.json
+      x-accepts: application/json
+components:
+  schemas:
+    OverviewResponse:
+      example:
+        copyright: copyright
+        results:
+          bestsellers_date: bestsellers_date
+          lists:
+          - books:
+            - contributor_note: contributor_note
+              age_group: age_group
+              author: author
+              description: description
+              primary_isbn10: primary_isbn10
+              title: title
+              primary_isbn13: primary_isbn13
+              contributor: contributor
+              price: 1
+              publisher: publisher
+              rank: 5
+              created_date: created_date
+              updated_date: updated_date
+            - contributor_note: contributor_note
+              age_group: age_group
+              author: author
+              description: description
+              primary_isbn10: primary_isbn10
+              title: title
+              primary_isbn13: primary_isbn13
+              contributor: contributor
+              price: 1
+              publisher: publisher
+              rank: 5
+              created_date: created_date
+              updated_date: updated_date
+            list_id: 6
+            list_image: list_image
+            list_name: list_name
+            display_name: display_name
+            updated: updated
+          - books:
+            - contributor_note: contributor_note
+              age_group: age_group
+              author: author
+              description: description
+              primary_isbn10: primary_isbn10
+              title: title
+              primary_isbn13: primary_isbn13
+              contributor: contributor
+              price: 1
+              publisher: publisher
+              rank: 5
+              created_date: created_date
+              updated_date: updated_date
+            - contributor_note: contributor_note
+              age_group: age_group
+              author: author
+              description: description
+              primary_isbn10: primary_isbn10
+              title: title
+              primary_isbn13: primary_isbn13
+              contributor: contributor
+              price: 1
+              publisher: publisher
+              rank: 5
+              created_date: created_date
+              updated_date: updated_date
+            list_id: 6
+            list_image: list_image
+            list_name: list_name
+            display_name: display_name
+            updated: updated
+          published_date: published_date
+        num_results: 0
+        status: status
+      properties:
+        status:
+          type: string
+        copyright:
+          type: string
+        num_results:
+          type: integer
+        results:
+          $ref: '#/components/schemas/OverviewResponse_results'
+      type: object
+      x-konfig-is-used-in-successful-response: true
+    ListGetBestSellersResponse:
+      example:
+        copyright: copyright
+        last_modified: last_modified
+        results:
+        - isbns:
+          - isbn13: isbn13
+            isbn10: isbn10
+          - isbn13: isbn13
+            isbn10: isbn10
+          dagger: 2
+          asterisk: 5
+          book_details:
+          - contributor_note: contributor_note
+            contributor: contributor
+            author: author
+            price: 7
+            age_group: age_group
+            description: description
+            publisher: publisher
+            primary_isbn10: primary_isbn10
+            title: title
+            primary_isbn13: primary_isbn13
+          - contributor_note: contributor_note
+            contributor: contributor
+            author: author
+            price: 7
+            age_group: age_group
+            description: description
+            publisher: publisher
+            primary_isbn10: primary_isbn10
+            title: title
+            primary_isbn13: primary_isbn13
+          list_name: list_name
+          display_name: display_name
+          weeks_on_list: 5
+          bestsellers_date: bestsellers_date
+          amazon_product_url: amazon_product_url
+          reviews:
+          - article_chapter_link: article_chapter_link
+            book_review_link: book_review_link
+            first_chapter_link: first_chapter_link
+            sunday_review_link: sunday_review_link
+          - article_chapter_link: article_chapter_link
+            book_review_link: book_review_link
+            first_chapter_link: first_chapter_link
+            sunday_review_link: sunday_review_link
+          rank: 6
+          published_date: published_date
+          rank_last_week: 1
+        - isbns:
+          - isbn13: isbn13
+            isbn10: isbn10
+          - isbn13: isbn13
+            isbn10: isbn10
+          dagger: 2
+          asterisk: 5
+          book_details:
+          - contributor_note: contributor_note
+            contributor: contributor
+            author: author
+            price: 7
+            age_group: age_group
+            description: description
+            publisher: publisher
+            primary_isbn10: primary_isbn10
+            title: title
+            primary_isbn13: primary_isbn13
+          - contributor_note: contributor_note
+            contributor: contributor
+            author: author
+            price: 7
+            age_group: age_group
+            description: description
+            publisher: publisher
+            primary_isbn10: primary_isbn10
+            title: title
+            primary_isbn13: primary_isbn13
+          list_name: list_name
+          display_name: display_name
+          weeks_on_list: 5
+          bestsellers_date: bestsellers_date
+          amazon_product_url: amazon_product_url
+          reviews:
+          - article_chapter_link: article_chapter_link
+            book_review_link: book_review_link
+            first_chapter_link: first_chapter_link
+            sunday_review_link: sunday_review_link
+          - article_chapter_link: article_chapter_link
+            book_review_link: book_review_link
+            first_chapter_link: first_chapter_link
+            sunday_review_link: sunday_review_link
+          rank: 6
+          published_date: published_date
+          rank_last_week: 1
+        num_results: 0
+        status: status
+      properties:
+        status:
+          type: string
+        copyright:
+          type: string
+        num_results:
+          type: integer
+        last_modified:
+          type: string
+        results:
+          items:
+            $ref: '#/components/schemas/ListGetBestSellersResponse_results_inner'
+          type: array
+      type: object
+      x-konfig-is-used-in-successful-response: true
+    ListGetByDateResponse:
+      example:
+        copyright: copyright
+        last_modified: last_modified
+        results:
+          bestsellers_date: bestsellers_date
+          books:
+          - isbns:
+            - isbn13: isbn13
+              isbn10: isbn10
+            - isbn13: isbn13
+              isbn10: isbn10
+            dagger: 7
+            contributor_note: contributor_note
+            author: author
+            age_group: age_group
+            asterisk: 2
+            description: description
+            primary_isbn10: primary_isbn10
+            title: title
+            primary_isbn13: primary_isbn13
+            sunday_review_link: sunday_review_link
+            weeks_on_list: 5
+            article_chapter_link: article_chapter_link
+            contributor: contributor
+            amazon_product_url: amazon_product_url
+            book_review_link: book_review_link
+            price: 9
+            book_image: book_image
+            rank: 1
+            publisher: publisher
+            rank_last_week: 5
+            first_chapter_link: first_chapter_link
+          - isbns:
+            - isbn13: isbn13
+              isbn10: isbn10
+            - isbn13: isbn13
+              isbn10: isbn10
+            dagger: 7
+            contributor_note: contributor_note
+            author: author
+            age_group: age_group
+            asterisk: 2
+            description: description
+            primary_isbn10: primary_isbn10
+            title: title
+            primary_isbn13: primary_isbn13
+            sunday_review_link: sunday_review_link
+            weeks_on_list: 5
+            article_chapter_link: article_chapter_link
+            contributor: contributor
+            amazon_product_url: amazon_product_url
+            book_review_link: book_review_link
+            price: 9
+            book_image: book_image
+            rank: 1
+            publisher: publisher
+            rank_last_week: 5
+            first_chapter_link: first_chapter_link
+          corrections:
+          - "{}"
+          - "{}"
+          normal_list_ends_at: 6
+          list_name: list_name
+          display_name: display_name
+          published_date: published_date
+          updated: updated
+        num_results: 0
+        status: status
+      properties:
+        status:
+          type: string
+        copyright:
+          type: string
+        num_results:
+          type: integer
+        last_modified:
+          type: string
+        results:
+          $ref: '#/components/schemas/ListGetByDateResponse_results'
+      type: object
+      x-konfig-is-used-in-successful-response: true
+    ListGetNamesResponse:
+      example:
+        copyright: copyright
+        results:
+        - newest_published_date: newest_published_date
+          oldest_published_date: oldest_published_date
+          list_name: list_name
+          list_name_encoded: list_name_encoded
+          display_name: display_name
+          updated: WEEKLY
+        - newest_published_date: newest_published_date
+          oldest_published_date: oldest_published_date
+          list_name: list_name
+          list_name_encoded: list_name_encoded
+          display_name: display_name
+          updated: WEEKLY
+        num_results: 0
+        status: status
+      properties:
+        status:
+          type: string
+        copyright:
+          type: string
+        num_results:
+          type: integer
+        results:
+          items:
+            $ref: '#/components/schemas/ListGetNamesResponse_results_inner'
+          type: array
+      type: object
+      x-konfig-is-used-in-successful-response: true
+    ListGetHistoryResponse:
+      example:
+        copyright: copyright
+        results:
+        - isbns:
+          - isbn13: isbn13
+            isbn10: isbn10
+          - isbn13: isbn13
+            isbn10: isbn10
+          contributor_note: contributor_note
+          ranks_history:
+          - weeks_on_list: 5
+            dagger: 2
+            bestsellers_date: bestsellers_date
+            asterisk: 5
+            rank: 1
+            primary_isbn10: primary_isbn10
+            list_name: list_name
+            primary_isbn13: primary_isbn13
+            display_name: display_name
+            published_date: published_date
+            ranks_last_week: ""
+          - weeks_on_list: 5
+            dagger: 2
+            bestsellers_date: bestsellers_date
+            asterisk: 5
+            rank: 1
+            primary_isbn10: primary_isbn10
+            list_name: list_name
+            primary_isbn13: primary_isbn13
+            display_name: display_name
+            published_date: published_date
+            ranks_last_week: ""
+          contributor: contributor
+          reviews:
+          - article_chapter_link: article_chapter_link
+            book_review_link: book_review_link
+            first_chapter_link: first_chapter_link
+            sunday_review_link: sunday_review_link
+          - article_chapter_link: article_chapter_link
+            book_review_link: book_review_link
+            first_chapter_link: first_chapter_link
+            sunday_review_link: sunday_review_link
+          author: author
+          price: 6
+          age_group: age_group
+          description: description
+          publisher: publisher
+          title: title
+        - isbns:
+          - isbn13: isbn13
+            isbn10: isbn10
+          - isbn13: isbn13
+            isbn10: isbn10
+          contributor_note: contributor_note
+          ranks_history:
+          - weeks_on_list: 5
+            dagger: 2
+            bestsellers_date: bestsellers_date
+            asterisk: 5
+            rank: 1
+            primary_isbn10: primary_isbn10
+            list_name: list_name
+            primary_isbn13: primary_isbn13
+            display_name: display_name
+            published_date: published_date
+            ranks_last_week: ""
+          - weeks_on_list: 5
+            dagger: 2
+            bestsellers_date: bestsellers_date
+            asterisk: 5
+            rank: 1
+            primary_isbn10: primary_isbn10
+            list_name: list_name
+            primary_isbn13: primary_isbn13
+            display_name: display_name
+            published_date: published_date
+            ranks_last_week: ""
+          contributor: contributor
+          reviews:
+          - article_chapter_link: article_chapter_link
+            book_review_link: book_review_link
+            first_chapter_link: first_chapter_link
+            sunday_review_link: sunday_review_link
+          - article_chapter_link: article_chapter_link
+            book_review_link: book_review_link
+            first_chapter_link: first_chapter_link
+            sunday_review_link: sunday_review_link
+          author: author
+          price: 6
+          age_group: age_group
+          description: description
+          publisher: publisher
+          title: title
+        num_results: 0
+        status: status
+      properties:
+        status:
+          type: string
+        copyright:
+          type: string
+        num_results:
+          type: integer
+        results:
+          items:
+            $ref: '#/components/schemas/ListGetHistoryResponse_results_inner'
+          type: array
+      type: object
+      x-konfig-is-used-in-successful-response: true
+    ReviewGetBookReviewsResponse:
+      example:
+        copyright: copyright
+        results:
+        - summary: summary
+          book_title: book_title
+          isbn13:
+          - isbn13
+          - isbn13
+          book_author: book_author
+          publication_dt: publication_dt
+          byline: byline
+          url: url
+        - summary: summary
+          book_title: book_title
+          isbn13:
+          - isbn13
+          - isbn13
+          book_author: book_author
+          publication_dt: publication_dt
+          byline: byline
+          url: url
+        num_results: 0
+        status: status
+      properties:
+        status:
+          type: string
+        copyright:
+          type: string
+        num_results:
+          type: integer
+        results:
+          items:
+            $ref: '#/components/schemas/ReviewGetBookReviewsResponse_results_inner'
+          type: array
+      type: object
+      x-konfig-is-used-in-successful-response: true
+    konfig-generated-schema-paths--lists.json-get-parameters-0-schema:
+      example: hardcover-fiction
+      type: string
+      x-do-not-generate: true
+    konfig-generated-schema-single-parameter-schema-get--lists.json:
+      properties:
+        list:
+          default: hardcover-fiction
+          example: hardcover-fiction
+          type: string
+          x-konfig-original-example: hardcover-fiction
+          x-konfig-generated-schema: konfig-generated-schema-paths--lists.json-get-parameters-0-schema
+        bestsellers-date:
+          pattern: "^\\d{4}-\\d{2}-\\d{2}$"
+          type: string
+        published-date:
+          pattern: "^\\d{4}-\\d{2}-\\d{2}$"
+          type: string
+        offset:
+          multipleOf: 20
+          type: integer
+      required:
+      - list
+      type: object
+      x-do-not-generate: true
+      x-konfig-is-parameter:
+      - list
+      - bestsellers-date
+      - published-date
+      - offset
+    konfig-generated-schema-single-parameter-schema-get--lists-date-list.json:
+      properties:
+        date:
+          pattern: "^(\\d{4}-\\d{2}-\\d{2}|current)$"
+          type: string
+        list:
+          type: string
+        offset:
+          multipleOf: 20
+          type: integer
+      required:
+      - date
+      - list
+      type: object
+      x-do-not-generate: true
+      x-konfig-is-parameter:
+      - date
+      - list
+      - offset
+    konfig-generated-schema-single-parameter-schema-get--lists-full-overview.json:
+      properties:
+        published_date:
+          pattern: "^\\d{4}-\\d{2}-\\d{2}$"
+          type: string
+      type: object
+      x-do-not-generate: true
+      x-konfig-is-parameter:
+      - published_date
+    konfig-generated-schema-single-parameter-schema-get--lists-overview.json:
+      properties:
+        published_date:
+          pattern: "^\\d{4}-\\d{2}-\\d{2}$"
+          type: string
+      type: object
+      x-do-not-generate: true
+      x-konfig-is-parameter:
+      - published_date
+    konfig-generated-schema-single-parameter-schema-get--lists-names.json:
+      properties: {}
+      type: object
+      x-do-not-generate: true
+      x-konfig-is-parameter: []
+    konfig-generated-schema-single-parameter-schema-get--lists-best-sellers-history.json:
+      properties:
+        age-group:
+          type: string
+        author:
+          type: string
+        contributor:
+          type: string
+        isbn:
+          type: string
+        offset:
+          multipleOf: 20
+          type: integer
+        price:
+          type: string
+        publisher:
+          type: string
+        title:
+          type: string
+      type: object
+      x-do-not-generate: true
+      x-konfig-is-parameter:
+      - age-group
+      - author
+      - contributor
+      - isbn
+      - offset
+      - price
+      - publisher
+      - title
+    konfig-generated-schema-single-parameter-schema-get--reviews.json:
+      properties:
+        isbn:
+          type: integer
+        title:
+          type: string
+        author:
+          type: string
+      type: object
+      x-do-not-generate: true
+      x-konfig-is-parameter:
+      - isbn
+      - title
+      - author
+    OverviewResponse_results_lists_inner_books_inner:
+      example:
+        contributor_note: contributor_note
+        age_group: age_group
+        author: author
+        description: description
+        primary_isbn10: primary_isbn10
+        title: title
+        primary_isbn13: primary_isbn13
+        contributor: contributor
+        price: 1
+        publisher: publisher
+        rank: 5
+        created_date: created_date
+        updated_date: updated_date
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        age_group:
+          type: string
+        author:
+          type: string
+        contributor:
+          type: string
+        contributor_note:
+          type: string
+        created_date:
+          type: string
+        price:
+          type: integer
+        primary_isbn13:
+          type: string
+        primary_isbn10:
+          type: string
+        publisher:
+          type: string
+        rank:
+          type: integer
+        updated_date:
+          type: string
+      type: object
+    OverviewResponse_results_lists_inner:
+      example:
+        books:
+        - contributor_note: contributor_note
+          age_group: age_group
+          author: author
+          description: description
+          primary_isbn10: primary_isbn10
+          title: title
+          primary_isbn13: primary_isbn13
+          contributor: contributor
+          price: 1
+          publisher: publisher
+          rank: 5
+          created_date: created_date
+          updated_date: updated_date
+        - contributor_note: contributor_note
+          age_group: age_group
+          author: author
+          description: description
+          primary_isbn10: primary_isbn10
+          title: title
+          primary_isbn13: primary_isbn13
+          contributor: contributor
+          price: 1
+          publisher: publisher
+          rank: 5
+          created_date: created_date
+          updated_date: updated_date
+        list_id: 6
+        list_image: list_image
+        list_name: list_name
+        display_name: display_name
+        updated: updated
+      properties:
+        list_id:
+          type: integer
+        list_name:
+          type: string
+        display_name:
+          type: string
+        updated:
+          type: string
+        list_image:
+          type: string
+        books:
+          items:
+            $ref: '#/components/schemas/OverviewResponse_results_lists_inner_books_inner'
+          type: array
+      type: object
+    OverviewResponse_results:
+      example:
+        bestsellers_date: bestsellers_date
+        lists:
+        - books:
+          - contributor_note: contributor_note
+            age_group: age_group
+            author: author
+            description: description
+            primary_isbn10: primary_isbn10
+            title: title
+            primary_isbn13: primary_isbn13
+            contributor: contributor
+            price: 1
+            publisher: publisher
+            rank: 5
+            created_date: created_date
+            updated_date: updated_date
+          - contributor_note: contributor_note
+            age_group: age_group
+            author: author
+            description: description
+            primary_isbn10: primary_isbn10
+            title: title
+            primary_isbn13: primary_isbn13
+            contributor: contributor
+            price: 1
+            publisher: publisher
+            rank: 5
+            created_date: created_date
+            updated_date: updated_date
+          list_id: 6
+          list_image: list_image
+          list_name: list_name
+          display_name: display_name
+          updated: updated
+        - books:
+          - contributor_note: contributor_note
+            age_group: age_group
+            author: author
+            description: description
+            primary_isbn10: primary_isbn10
+            title: title
+            primary_isbn13: primary_isbn13
+            contributor: contributor
+            price: 1
+            publisher: publisher
+            rank: 5
+            created_date: created_date
+            updated_date: updated_date
+          - contributor_note: contributor_note
+            age_group: age_group
+            author: author
+            description: description
+            primary_isbn10: primary_isbn10
+            title: title
+            primary_isbn13: primary_isbn13
+            contributor: contributor
+            price: 1
+            publisher: publisher
+            rank: 5
+            created_date: created_date
+            updated_date: updated_date
+          list_id: 6
+          list_image: list_image
+          list_name: list_name
+          display_name: display_name
+          updated: updated
+        published_date: published_date
+      properties:
+        bestsellers_date:
+          type: string
+        published_date:
+          type: string
+        lists:
+          items:
+            $ref: '#/components/schemas/OverviewResponse_results_lists_inner'
+          type: array
+      type: object
+    ListGetBestSellersResponse_results_inner_isbns_inner:
+      example:
+        isbn13: isbn13
+        isbn10: isbn10
+      properties:
+        isbn10:
+          type: string
+        isbn13:
+          type: string
+      type: object
+    ListGetBestSellersResponse_results_inner_book_details_inner:
+      example:
+        contributor_note: contributor_note
+        contributor: contributor
+        author: author
+        price: 7
+        age_group: age_group
+        description: description
+        publisher: publisher
+        primary_isbn10: primary_isbn10
+        title: title
+        primary_isbn13: primary_isbn13
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        contributor:
+          type: string
+        author:
+          type: string
+        contributor_note:
+          type: string
+        price:
+          type: integer
+        age_group:
+          type: string
+        publisher:
+          type: string
+        primary_isbn13:
+          type: string
+        primary_isbn10:
+          type: string
+      type: object
+    ListGetBestSellersResponse_results_inner_reviews_inner:
+      example:
+        article_chapter_link: article_chapter_link
+        book_review_link: book_review_link
+        first_chapter_link: first_chapter_link
+        sunday_review_link: sunday_review_link
+      properties:
+        book_review_link:
+          type: string
+        first_chapter_link:
+          type: string
+        sunday_review_link:
+          type: string
+        article_chapter_link:
+          type: string
+      type: object
+    ListGetBestSellersResponse_results_inner:
+      example:
+        isbns:
+        - isbn13: isbn13
+          isbn10: isbn10
+        - isbn13: isbn13
+          isbn10: isbn10
+        dagger: 2
+        asterisk: 5
+        book_details:
+        - contributor_note: contributor_note
+          contributor: contributor
+          author: author
+          price: 7
+          age_group: age_group
+          description: description
+          publisher: publisher
+          primary_isbn10: primary_isbn10
+          title: title
+          primary_isbn13: primary_isbn13
+        - contributor_note: contributor_note
+          contributor: contributor
+          author: author
+          price: 7
+          age_group: age_group
+          description: description
+          publisher: publisher
+          primary_isbn10: primary_isbn10
+          title: title
+          primary_isbn13: primary_isbn13
+        list_name: list_name
+        display_name: display_name
+        weeks_on_list: 5
+        bestsellers_date: bestsellers_date
+        amazon_product_url: amazon_product_url
+        reviews:
+        - article_chapter_link: article_chapter_link
+          book_review_link: book_review_link
+          first_chapter_link: first_chapter_link
+          sunday_review_link: sunday_review_link
+        - article_chapter_link: article_chapter_link
+          book_review_link: book_review_link
+          first_chapter_link: first_chapter_link
+          sunday_review_link: sunday_review_link
+        rank: 6
+        published_date: published_date
+        rank_last_week: 1
+      properties:
+        list_name:
+          type: string
+        display_name:
+          type: string
+        bestsellers_date:
+          type: string
+        published_date:
+          type: string
+        rank:
+          type: integer
+        rank_last_week:
+          type: integer
+        weeks_on_list:
+          type: integer
+        asterisk:
+          type: integer
+        dagger:
+          type: integer
+        amazon_product_url:
+          type: string
+        isbns:
+          items:
+            $ref: '#/components/schemas/ListGetBestSellersResponse_results_inner_isbns_inner'
+          type: array
+        book_details:
+          items:
+            $ref: '#/components/schemas/ListGetBestSellersResponse_results_inner_book_details_inner'
+          type: array
+        reviews:
+          items:
+            $ref: '#/components/schemas/ListGetBestSellersResponse_results_inner_reviews_inner'
+          type: array
+      type: object
+    ListGetByDateResponse_results_books_inner:
+      example:
+        isbns:
+        - isbn13: isbn13
+          isbn10: isbn10
+        - isbn13: isbn13
+          isbn10: isbn10
+        dagger: 7
+        contributor_note: contributor_note
+        author: author
+        age_group: age_group
+        asterisk: 2
+        description: description
+        primary_isbn10: primary_isbn10
+        title: title
+        primary_isbn13: primary_isbn13
+        sunday_review_link: sunday_review_link
+        weeks_on_list: 5
+        article_chapter_link: article_chapter_link
+        contributor: contributor
+        amazon_product_url: amazon_product_url
+        book_review_link: book_review_link
+        price: 9
+        book_image: book_image
+        rank: 1
+        publisher: publisher
+        rank_last_week: 5
+        first_chapter_link: first_chapter_link
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        rank:
+          type: integer
+        rank_last_week:
+          type: integer
+        weeks_on_list:
+          type: integer
+        asterisk:
+          type: integer
+        dagger:
+          type: integer
+        primary_isbn10:
+          type: string
+        primary_isbn13:
+          type: string
+        publisher:
+          type: string
+        price:
+          type: integer
+        author:
+          type: string
+        contributor:
+          type: string
+        contributor_note:
+          type: string
+        book_image:
+          type: string
+        amazon_product_url:
+          type: string
+        age_group:
+          type: string
+        book_review_link:
+          type: string
+        first_chapter_link:
+          type: string
+        sunday_review_link:
+          type: string
+        article_chapter_link:
+          type: string
+        isbns:
+          items:
+            $ref: '#/components/schemas/ListGetBestSellersResponse_results_inner_isbns_inner'
+          type: array
+      type: object
+    ListGetByDateResponse_results:
+      example:
+        bestsellers_date: bestsellers_date
+        books:
+        - isbns:
+          - isbn13: isbn13
+            isbn10: isbn10
+          - isbn13: isbn13
+            isbn10: isbn10
+          dagger: 7
+          contributor_note: contributor_note
+          author: author
+          age_group: age_group
+          asterisk: 2
+          description: description
+          primary_isbn10: primary_isbn10
+          title: title
+          primary_isbn13: primary_isbn13
+          sunday_review_link: sunday_review_link
+          weeks_on_list: 5
+          article_chapter_link: article_chapter_link
+          contributor: contributor
+          amazon_product_url: amazon_product_url
+          book_review_link: book_review_link
+          price: 9
+          book_image: book_image
+          rank: 1
+          publisher: publisher
+          rank_last_week: 5
+          first_chapter_link: first_chapter_link
+        - isbns:
+          - isbn13: isbn13
+            isbn10: isbn10
+          - isbn13: isbn13
+            isbn10: isbn10
+          dagger: 7
+          contributor_note: contributor_note
+          author: author
+          age_group: age_group
+          asterisk: 2
+          description: description
+          primary_isbn10: primary_isbn10
+          title: title
+          primary_isbn13: primary_isbn13
+          sunday_review_link: sunday_review_link
+          weeks_on_list: 5
+          article_chapter_link: article_chapter_link
+          contributor: contributor
+          amazon_product_url: amazon_product_url
+          book_review_link: book_review_link
+          price: 9
+          book_image: book_image
+          rank: 1
+          publisher: publisher
+          rank_last_week: 5
+          first_chapter_link: first_chapter_link
+        corrections:
+        - "{}"
+        - "{}"
+        normal_list_ends_at: 6
+        list_name: list_name
+        display_name: display_name
+        published_date: published_date
+        updated: updated
+      properties:
+        list_name:
+          type: string
+        bestsellers_date:
+          type: string
+        published_date:
+          type: string
+        display_name:
+          type: string
+        normal_list_ends_at:
+          type: integer
+        updated:
+          type: string
+        books:
+          items:
+            $ref: '#/components/schemas/ListGetByDateResponse_results_books_inner'
+          type: array
+        corrections:
+          items:
+            properties: {}
+            type: object
+          type: array
+      type: object
+    ListGetNamesResponse_results_inner:
+      example:
+        newest_published_date: newest_published_date
+        oldest_published_date: oldest_published_date
+        list_name: list_name
+        list_name_encoded: list_name_encoded
+        display_name: display_name
+        updated: WEEKLY
+      properties:
+        list_name:
+          type: string
+        display_name:
+          type: string
+        list_name_encoded:
+          type: string
+        oldest_published_date:
+          type: string
+        newest_published_date:
+          type: string
+        updated:
+          enum:
+          - WEEKLY
+          - MONTHLY
+          type: string
+      type: object
+    ListGetHistoryResponse_results_inner_ranks_history_inner:
+      example:
+        weeks_on_list: 5
+        dagger: 2
+        bestsellers_date: bestsellers_date
+        asterisk: 5
+        rank: 1
+        primary_isbn10: primary_isbn10
+        list_name: list_name
+        primary_isbn13: primary_isbn13
+        display_name: display_name
+        published_date: published_date
+        ranks_last_week: ""
+      properties:
+        primary_isbn10:
+          type: string
+        primary_isbn13:
+          type: string
+        rank:
+          type: integer
+        list_name:
+          type: string
+        display_name:
+          type: string
+        published_date:
+          type: string
+        bestsellers_date:
+          type: string
+        weeks_on_list:
+          type: integer
+        ranks_last_week:
+          nullable: true
+        asterisk:
+          type: integer
+        dagger:
+          type: integer
+      type: object
+    ListGetHistoryResponse_results_inner:
+      example:
+        isbns:
+        - isbn13: isbn13
+          isbn10: isbn10
+        - isbn13: isbn13
+          isbn10: isbn10
+        contributor_note: contributor_note
+        ranks_history:
+        - weeks_on_list: 5
+          dagger: 2
+          bestsellers_date: bestsellers_date
+          asterisk: 5
+          rank: 1
+          primary_isbn10: primary_isbn10
+          list_name: list_name
+          primary_isbn13: primary_isbn13
+          display_name: display_name
+          published_date: published_date
+          ranks_last_week: ""
+        - weeks_on_list: 5
+          dagger: 2
+          bestsellers_date: bestsellers_date
+          asterisk: 5
+          rank: 1
+          primary_isbn10: primary_isbn10
+          list_name: list_name
+          primary_isbn13: primary_isbn13
+          display_name: display_name
+          published_date: published_date
+          ranks_last_week: ""
+        contributor: contributor
+        reviews:
+        - article_chapter_link: article_chapter_link
+          book_review_link: book_review_link
+          first_chapter_link: first_chapter_link
+          sunday_review_link: sunday_review_link
+        - article_chapter_link: article_chapter_link
+          book_review_link: book_review_link
+          first_chapter_link: first_chapter_link
+          sunday_review_link: sunday_review_link
+        author: author
+        price: 6
+        age_group: age_group
+        description: description
+        publisher: publisher
+        title: title
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        contributor:
+          type: string
+        author:
+          type: string
+        contributor_note:
+          type: string
+        price:
+          type: integer
+        age_group:
+          type: string
+        publisher:
+          type: string
+        isbns:
+          items:
+            $ref: '#/components/schemas/ListGetBestSellersResponse_results_inner_isbns_inner'
+          type: array
+        ranks_history:
+          items:
+            $ref: '#/components/schemas/ListGetHistoryResponse_results_inner_ranks_history_inner'
+          type: array
+        reviews:
+          items:
+            $ref: '#/components/schemas/ListGetBestSellersResponse_results_inner_reviews_inner'
+          type: array
+      type: object
+    ReviewGetBookReviewsResponse_results_inner:
+      example:
+        summary: summary
+        book_title: book_title
+        isbn13:
+        - isbn13
+        - isbn13
+        book_author: book_author
+        publication_dt: publication_dt
+        byline: byline
+        url: url
+      properties:
+        summary:
+          type: string
+        url:
+          type: string
+        publication_dt:
+          type: string
+        byline:
+          type: string
+        book_title:
+          type: string
+        book_author:
+          type: string
+        isbn13:
+          items:
+            type: string
+          type: array
+      type: object
+  securitySchemes:
+    api-key:
+      in: query
+      name: api-key
+      type: apiKey
+      x-konfig-globally-required-security: true
+
